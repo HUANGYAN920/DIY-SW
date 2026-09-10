@@ -1,6 +1,5 @@
 https://huangyan920.github.io/DIY-SW/ 体验网址
-
-    <h1>只要变化有规律，<br class="hide"><span class="hl">就能实现自动设计</span></h1>
+  <h1>只要变化有规律，<br class="hide"><span class="hl">就能实现自动设计</span></h1>
     <p class="sub">专注非标自动化参数化设计：把重复的建模、改图、出BOM，变成一次性的规则定义。让设计经验沉淀下来，让新工程师像老师傅一样有经验。</p>
     <div class="slogan">&lt; No Code · No SDK · Just Rules &gt;</div>
     <div class="hero-cta">
