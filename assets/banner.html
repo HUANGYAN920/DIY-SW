@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Banners Light</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#3a3a3a;font-family:"Source Han Serif SC","Noto Serif SC","SimSun","Songti SC",serif}
+  .banner{width:1600px;height:640px;position:relative;overflow:hidden;margin:0 0 40px;color:#2B2622;
+    background:
+      radial-gradient(900px 480px at 88% -15%,rgba(169,123,47,.10),transparent 60%),
+      radial-gradient(760px 420px at 4% 120%,rgba(90,110,130,.08),transparent 60%),
+      linear-gradient(160deg,#FBF7EF 0%,#F7F1E4 55%,#F3ECDC 100%);}
+  .banner::before{content:"";position:absolute;inset:0;opacity:.5;
+    background-image:linear-gradient(rgba(43,38,34,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(43,38,34,.05) 1px,transparent 1px);
+    background-size:52px 52px;
+    -webkit-mask-image:radial-gradient(ellipse at 50% 45%,#000 25%,transparent 78%);
+    mask-image:radial-gradient(ellipse at 50% 45%,#000 25%,transparent 78%);}
+  .in{position:absolute;left:0;right:0;top:0;bottom:0;width:1600px;margin:0 auto;padding:0 100px;display:flex;align-items:center;justify-content:space-between;gap:60px}
+  .txt{max-width:900px}
+  .tag{display:inline-flex;align-items:center;gap:14px;font-size:20px;letter-spacing:6px;color:#A97B2F;margin-bottom:34px;border-top:1px solid rgba(169,123,47,.5);border-bottom:1px solid rgba(169,123,47,.5);padding:8px 2px}
+  h1{font-size:64px;line-height:1.32;font-weight:700;letter-spacing:3px;color:#2B2622}
+  h1 .hl{color:#A97B2F}
+  .sub{margin-top:26px;font-size:23px;color:#6F675C;line-height:1.7;letter-spacing:1px}
+  .slogan{margin-top:30px;font-family:Consolas,monospace;font-size:19px;color:#5A6E82;letter-spacing:2px}
+  .btns{margin-top:42px;display:flex;gap:18px;font-family:"Microsoft YaHei",sans-serif}
+  .btn{padding:16px 44px;font-size:22px;font-weight:600;letter-spacing:3px;text-decoration:none}
+  .b1{background:#2B2622;color:#F7F1E4}
+  .b2{border:1.5px solid #2B2622;color:#2B2622}
+  .art{flex-shrink:0;width:520px;height:470px;position:relative}
+  .art svg{position:absolute;inset:0;width:100%;height:100%}
+  .seal{position:absolute;right:56px;top:46px;width:86px;height:86px;border:2px solid #A97B2F;display:flex;align-items:center;justify-content:center;color:#A97B2F;font-size:26px;letter-spacing:6px;transform:rotate(4deg);writing-mode:vertical-rl;text-orientation:upright}
+</style>
+</head>
+<body>
+
+<!-- Banner 1 -->
+<div class="banner" id="banner1">
+  <div class="seal">参数化</div>
+  <div class="in">
+    <div class="txt">
+      <div class="tag">非标自动化 · 参数化设计</div>
+      <h1>只要变化有规律，<br><span class="hl">就能实现自动设计</span></h1>
+      <div class="sub">把重复的建模、改图、出BOM，变成一次性的规则定义。<br>让设计经验沉淀下来，让新工程师像老师傅一样有经验。</div>
+      <div class="slogan">&lt; No Code · No SDK · Just Rules &gt;</div>
+      <div class="btns">
+        <a class="btn b1">了解服务</a>
+        <a class="btn b2">进入图书馆</a>
+      </div>
+    </div>
+    <div class="art">
+      <svg viewBox="0 0 520 470">
+        <circle cx="262" cy="238" r="200" fill="none" stroke="rgba(43,38,34,.10)" stroke-width="1.5"/>
+        <circle cx="262" cy="238" r="158" fill="none" stroke="rgba(169,123,47,.22)" stroke-width="1.5"/>
+        <circle cx="262" cy="238" r="116" fill="none" stroke="rgba(90,110,130,.16)" stroke-width="1.5"/>
+        <g style="transform-origin:262px 238px;animation:spin 30s linear infinite">
+          <circle cx="262" cy="238" r="200" fill="none" stroke="rgba(169,123,47,.45)" stroke-width="1.5" stroke-dasharray="2 16"/>
+          <circle cx="462" cy="238" r="7" fill="#A97B2F"/>
+        </g>
+        <path d="M262 108v-32M262 368v-32M112 238H80M412 238h-32" stroke="rgba(43,38,34,.35)" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="262" cy="238" r="54" fill="none" stroke="#A97B2F" stroke-width="2"/>
+        <circle cx="262" cy="238" r="10" fill="#2B2622"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- Banner 2 -->
+<div class="banner" id="banner2">
+  <div class="seal">三日课</div>
+  <div class="in">
+    <div class="txt">
+      <div class="tag">3 天培训 · 包教包会</div>
+      <h1>不写代码，<br><span class="hl">普通工程师也能参数化</span></h1>
+      <div class="sub">不需要二次开发，不需要编程语言。<br>围绕你自己的产品案例：规律梳理 → 规则定义 → 出图落地。</div>
+      <div class="slogan">&lt; DAY 1 规律 · DAY 2 规则 · DAY 3 落地 &gt;</div>
+      <div class="btns">
+        <a class="btn b1">查看培训安排</a>
+        <a class="btn b2">预约报名</a>
+      </div>
+    </div>
+    <div class="art">
+      <svg viewBox="0 0 520 470">
+        <rect x="30" y="42" width="460" height="386" rx="4" fill="rgba(169,123,47,.05)" stroke="rgba(43,38,34,.16)" stroke-width="1.5"/>
+        <g font-family="Consolas,monospace" font-size="24" fill="rgba(43,38,34,.55)">
+          <text x="72" y="140">01 规律总结</text>
+          <text x="72" y="205">02 参数定义</text>
+          <text x="72" y="270">03 规则驱动</text>
+          <text x="72" y="335">04 自动出图</text>
+          <text x="72" y="398">05 BOM 生成</text>
+        </g>
+        <path d="M320 112h70M320 177h110M320 242h84M320 307h118M320 372h72" stroke="#A97B2F" stroke-width="4" stroke-linecap="round"/>
+        <path d="M452 336l-16 16m16-8l-8-8-14 14" stroke="#2B2622" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- Banner 3 -->
+<div class="banner" id="banner3">
+  <div class="seal">自主</div>
+  <div class="in">
+    <div class="txt">
+      <div class="tag">参数化设计图书馆</div>
+      <h1>经验自主掌控，<br><span class="hl">不再依赖软件服务商</span></h1>
+      <div class="sub">自己总结变化规律，自主定义参数规则。<br>设计经验不出企业、不出电脑，安全有保障。</div>
+      <div class="slogan">&lt; SELF-CONTROLLED · DATA SECURITY &gt;</div>
+      <div class="btns">
+        <a class="btn b1">浏览图书馆</a>
+        <a class="btn b2">联系我</a>
+      </div>
+    </div>
+    <div class="art">
+      <svg viewBox="0 0 520 470">
+        <path d="M80 84h200a50 50 0 0 1 50 50v200H80z" fill="rgba(169,123,47,.06)" stroke="rgba(43,38,34,.18)" stroke-width="1.5"/>
+        <path d="M440 84H240a50 50 0 0 0-50 50v200h250z" fill="rgba(90,110,130,.07)" stroke="rgba(43,38,34,.18)" stroke-width="1.5"/>
+        <path d="M112 184h92M112 238h92M112 292h92" stroke="rgba(43,38,34,.4)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M328 184h92M328 238h92M328 292h92" stroke="rgba(169,123,47,.5)" stroke-width="4" stroke-linecap="round"/>
+        <rect x="404" y="92" width="86" height="86" fill="none" stroke="#A97B2F" stroke-width="2"/>
+        <text x="418" y="152" font-family="Consolas,monospace" font-size="30" fill="#A97B2F">PDF</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
