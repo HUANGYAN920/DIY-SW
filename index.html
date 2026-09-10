@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIY参数化 · 非标自动化参数化设计</title>
+<meta name="description" content="只要变化有规律，就可实现自动设计。不写代码、不做二次开发，自己总结变化规律，自主定义参数化设计，培训3天包教包会。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%230B2A4A'/%3E%3Ccircle cx='20' cy='20' r='13' stroke='%23F59E0B' stroke-width='3' fill='none'/%3E%3Ccircle cx='20' cy='20' r='5.5' fill='%2335C2E8'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --navy:#0B2A4A;
+    --navy-2:#123A63;
+    --blue:#1E6FD9;
+    --blue-light:#4D94EA;
+    --cyan:#35C2E8;
+    --orange:#F59E0B;
+    --ink:#1B2A3A;
+    --gray:#5A6B7B;
+    --line:#E3EAF2;
+    --bg:#F5F8FC;
+    --white:#fff;
+    --radius:14px;
+    --shadow:0 10px 30px rgba(11,42,74,.10);
+    --font:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+    --mono:"Consolas","Courier New",monospace;
+    /* 主题变量（默认：宣纸） */
+    --paper:#FBF7EF;
+    --paper-rgb:251,247,239;
+    --paper-2:#F7F1E4;
+    --paper-3:#F3ECDC;
+    --ink:#2B2622;
+    --ink-2:#4A433A;
+    --ink-3:#6F675C;
+    --ink-4:#5A6E82;
+    --ink-rgb:43,38,34;
+    --gold:#A97B2F;
+    --gold-rgb:169,123,47;
+    --bg-page:#F7F1E4;
+  }
+  /* 主题：素 */
+  html[data-theme="su"]{
+    --paper:#FFFFFF;
+    --paper-rgb:255,255,255;
+    --paper-2:#F8F8F6;
+    --paper-3:#F0F0EC;
+    --ink:#26221E;
+    --ink-2:#3F3A33;
+    --ink-3:#66605A;
+    --ink-4:#5A6672;
+    --ink-rgb:38,34,30;
+    --gold:#B3541E;
+    --gold-rgb:179,84,30;
+    --bg-page:#F7F7F5;
+  }
+  /* 主题：墨夜 */
+  html[data-theme="moye"]{
+    --paper:#14181D;
+    --paper-rgb:20,24,29;
+    --paper-2:#1A2027;
+    --paper-3:#202730;
+    --ink:#E9E5DC;
+    --ink-2:#C9C3B8;
+    --ink-3:#9A948A;
+    --ink-4:#8AA0B4;
+    --ink-rgb:233,229,220;
+    --gold:#D9A654;
+    --gold-rgb:217,166,84;
+    --bg-page:#101418;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg-page);line-height:1.7;transition:background .4s ease,color .4s ease}
+  a{text-decoration:none;color:inherit}
+  img{max-width:100%}
+
+  /* ===== 导航 ===== */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    background:rgba(var(--paper-rgb),.94);backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(var(--ink-rgb),.10);
+  }
+  .nav-wrap{max-width:1180px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;color:var(--ink);letter-spacing:1px}
+  .logo svg{flex-shrink:0;transition:transform .8s cubic-bezier(.34,1.4,.64,1)}
+  .logo:hover svg{transform:rotate(360deg)}
+  .logo b{color:var(--gold)}
+  nav{display:flex;gap:22px}
+  nav a{color:var(--ink-2);font-size:15px;transition:color .2s;letter-spacing:1px;position:relative}
+  nav a:hover{color:var(--gold)}
+  .nav-center{display:flex;align-items:center;gap:20px}
+  .nav-search{display:flex;align-items:center;gap:8px;border:1px solid rgba(var(--ink-rgb),.2);background:var(--paper-2);border-radius:999px;padding:6px 14px;width:190px;transition:border-color .2s,box-shadow .2s}
+  .nav-search:focus-within{border-color:var(--gold);box-shadow:0 0 0 2px rgba(var(--gold-rgb),.15)}
+  .nav-search svg{flex-shrink:0}
+  .nav-search input{border:none;background:none;outline:none;font-size:13px;color:var(--ink);width:100%;font-family:var(--font)}
+  .nav-search input::placeholder{color:var(--ink-3)}
+  .nav-search .search-kbd{font-family:var(--mono);font-size:11px;color:var(--ink-3);border:1px solid rgba(var(--ink-rgb),.22);border-radius:4px;padding:1px 6px;flex-shrink:0}
+  .theme-switch{display:flex;gap:4px;align-items:center;border:1px solid rgba(var(--ink-rgb),.22);border-radius:999px;padding:3px;margin-left:14px}
+  .theme-switch button{border:none;background:none;color:var(--ink-2);font-size:12px;padding:4px 12px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s;letter-spacing:2px}
+  .theme-switch button.on{background:var(--gold);color:#fff}
+  .menu-btn{display:none;background:none;border:1px solid rgba(var(--ink-rgb),.35);color:var(--ink);border-radius:8px;padding:6px 12px;font-size:14px;cursor:pointer}
+  .nav-right{display:flex;align-items:center;gap:10px}
+  .logo svg circle,.logo svg path{transition:stroke .3s}
+  .logo svg circle:first-of-type{stroke:var(--gold)}
+  .logo svg circle:last-of-type{fill:var(--ink-4)}
+  .logo svg path{stroke:var(--gold)}
+
+  /* ===== Hero 轮播 ===== */
+  .hero{
+    position:relative;color:var(--ink);padding:0;
+    background:
+      radial-gradient(1000px 500px at 82% -10%,rgba(var(--gold-rgb),.10),transparent 60%),
+      radial-gradient(800px 400px at 10% 110%,rgba(var(--ink-rgb),.06),transparent 60%),
+      linear-gradient(160deg,var(--paper) 0%,var(--paper-2) 55%,var(--paper-3) 100%);
+    overflow:hidden;
+  }
+  .hero::before{ /* 图纸网格 */
+    content:"";position:absolute;inset:0;opacity:.55;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(var(--ink-rgb),.06) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(var(--ink-rgb),.06) 1px,transparent 1px);
+    background-size:52px 52px;
+    mask-image:radial-gradient(ellipse at 50% 42%,#000 25%,transparent 78%);
+  }
+  .slides{position:relative;height:560px;max-width:1180px;margin:0 auto}
+  .slide{position:absolute;inset:0;padding:0 40px;display:flex;align-items:center;justify-content:space-between;gap:40px;opacity:0;visibility:hidden;transform:translateX(40px);transition:opacity .7s ease,transform .7s ease,visibility .7s}
+  .slide.on{opacity:1;visibility:visible;transform:none}
+  .slide-txt{max-width:560px}
+  .slide-tag{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(var(--ink-rgb),.28);border-radius:999px;padding:6px 18px;font-size:13px;letter-spacing:2px;color:var(--gold);margin-bottom:22px}
+  .slide-tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold);animation:blink 1.6s infinite}
+  .slide h1{font-size:clamp(30px,4.6vw,50px);line-height:1.25;font-weight:800;letter-spacing:2px;color:var(--ink)}
+  .slide h1 .hl{color:var(--gold)}
+  .slide p{margin-top:18px;font-size:clamp(14px,1.8vw,17px);color:var(--ink-3)}
+  .slide .slogan{margin-top:26px;font-family:var(--mono);font-size:14px;color:var(--ink-4);letter-spacing:1px}
+  .slide-cta{margin-top:34px;display:flex;gap:16px;flex-wrap:wrap}
+  .slide-art{flex-shrink:0;width:380px;height:340px;position:relative}
+  .slide-art svg{position:absolute;inset:0;width:100%;height:100%}
+  .slide-art .ring{animation:spin 26s linear infinite;transform-origin:center}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .arrows{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:14px;z-index:5}
+  .arrows button{width:42px;height:42px;border-radius:50%;border:1px solid rgba(var(--ink-rgb),.4);background:rgba(251,247,239,.7);color:var(--ink);font-size:20px;cursor:pointer;transition:background .2s,color .2s}
+  .arrows button:hover{background:var(--ink);color:var(--paper-2)}
+  .dots{position:absolute;top:30px;right:40px;display:flex;gap:10px;z-index:5}
+  .dots button{width:9px;height:9px;border-radius:50%;border:none;background:rgba(var(--ink-rgb),.25);cursor:pointer;padding:0}
+  .dots button.on{background:var(--gold)}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* ===== 图书馆 ===== */
+  .lib-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px}
+  .lib-card{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);padding:30px 28px;box-shadow:var(--shadow);transition:transform .25s,box-shadow .25s;display:flex;flex-direction:column;gap:12px}
+  .lib-card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(11,42,74,.16)}
+  .lib-card .head{display:flex;align-items:center;justify-content:space-between}
+  .lib-card .type{font-family:var(--mono);font-size:12px;color:var(--blue);letter-spacing:2px}
+  .lib-card .status{font-size:12px;color:#fff;background:var(--orange);border-radius:999px;padding:3px 12px;font-weight:600}
+  .lib-card .status.soon{background:var(--gray)}
+  .lib-card h3{font-size:19px;color:var(--ink)}
+  .lib-card p{font-size:14px;color:var(--gray);flex:1}
+  .lib-card .meta{font-size:12px;color:#8A98A8;font-family:var(--mono)}
+
+  /* ===== 专题 / 收藏 / 关于 ===== */
+  .fav-card{background:var(--paper-2);border:1px solid rgba(var(--ink-rgb),.12);border-radius:var(--radius);padding:28px 26px;transition:transform .25s,box-shadow .25s;display:flex;flex-direction:column;gap:10px}
+  .fav-card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,0,0,.12)}
+  .fav-card .head{display:flex;align-items:center;justify-content:space-between}
+  .fav-card .type{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:2px}
+  .fav-btn{border:1px solid rgba(var(--ink-rgb),.25);background:none;color:var(--ink-2);border-radius:999px;padding:4px 14px;font-size:12px;cursor:pointer;transition:all .2s}
+  .fav-btn.on{background:var(--gold);border-color:var(--gold);color:#fff}
+  .fav-card h3{font-size:17px;color:var(--ink)}
+  .fav-card p{font-size:13.5px;color:var(--ink-3)}
+  .about-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center}
+  .about-txt h3{font-size:22px;color:var(--ink);margin-bottom:16px}
+  .about-txt p{font-size:15px;color:var(--ink-3);margin-bottom:12px;line-height:1.8}
+  .about-list{list-style:none;margin-top:8px}
+  .about-list li{font-size:14px;color:var(--ink-2);padding:6px 0 6px 24px;position:relative}
+  .about-list li::before{content:"◆";position:absolute;left:0;color:var(--gold);font-size:11px;top:10px}
+  .about-side{background:linear-gradient(160deg,var(--navy),var(--navy-2));color:#fff;border-radius:var(--radius);padding:34px 30px}
+  .about-side h4{font-size:16px;margin-bottom:14px;color:#fff}
+  .about-side li{list-style:none;font-size:14px;color:rgba(255,255,255,.82);padding:8px 0;border-bottom:1px dashed rgba(255,255,255,.15)}
+  .about-side li:last-child{border-bottom:none}
+  .about-side .big{margin-top:16px;text-align:center;font-size:20px;color:var(--orange);font-weight:700;letter-spacing:2px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 34px;border-radius:10px;font-size:16px;font-weight:600;transition:transform .2s,box-shadow .2s}
+  .btn:hover{transform:translateY(-2px)}
+  .btn-primary{background:var(--gold);color:var(--paper-2);box-shadow:0 8px 24px rgba(0,0,0,.15)}
+  .btn-ghost{border:1.5px solid var(--ink);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+
+  /* ===== 卖点条 ===== */
+  .strip{background:var(--paper);border-bottom:1px solid rgba(var(--ink-rgb),.08)}
+  .strip-inner{max-width:1180px;margin:0 auto;padding:18px 24px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  .strip span{font-size:14px;color:var(--ink);background:var(--paper-3);border-radius:8px;padding:7px 16px;font-weight:600;letter-spacing:1px}
+  .strip span b{color:var(--gold)}
+
+  /* ===== 通用区 ===== */
+  section{padding:90px 24px}
+  .wrap{max-width:1180px;margin:0 auto}
+  .sec-head{text-align:center;margin-bottom:56px}
+  .sec-head .kicker{font-family:var(--mono);color:var(--blue);letter-spacing:3px;font-size:13px}
+  .sec-head h2{font-size:clamp(24px,3.5vw,36px);color:var(--ink);font-weight:800;margin-top:10px;letter-spacing:1px}
+  .sec-head p{color:var(--gray);margin-top:12px;max-width:620px;margin-left:auto;margin-right:auto}
+
+  /* ===== 核心主张 ===== */
+  .claim{background:var(--navy);color:#fff}
+  .claim .sec-head h2{color:#fff}
+  .claim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}
+  .claim-card{
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    border-radius:var(--radius);padding:30px 24px;transition:transform .25s,border-color .25s;
+  }
+  .claim-card:hover{transform:translateY(-6px);border-color:var(--orange)}
+  .claim-card .num{font-family:var(--mono);font-size:13px;color:var(--orange);letter-spacing:2px}
+  .claim-card h3{font-size:19px;margin:12px 0 8px}
+  .claim-card p{font-size:14px;color:rgba(255,255,255,.72)}
+  .claim-card .cross{color:rgba(255,255,255,.4);font-size:13px}
+  .claim-card .thumb{height:128px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;background:linear-gradient(135deg,rgba(30,111,217,.28),rgba(53,194,232,.12));border:1px solid rgba(255,255,255,.10)}
+  .claim-card .en{font-family:var(--mono);font-size:12px;color:var(--cyan);letter-spacing:2px;margin-bottom:4px}
+
+  /* ===== 服务 ===== */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px}
+  .card{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);padding:34px 28px;box-shadow:var(--shadow);transition:transform .25s,box-shadow .25s}
+  .card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(11,42,74,.16)}
+  .card .ico{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+  .card h3{font-size:19px;color:var(--ink);margin-bottom:10px}
+  .card p{font-size:14px;color:var(--gray)}
+  .card ul{list-style:none;margin-top:12px}
+  .card li{font-size:13.5px;color:var(--gray);padding:3px 0 3px 20px;position:relative}
+  .card li::before{content:"▸";position:absolute;left:0;color:var(--orange)}
+
+  /* ===== 培训 ===== */
+  .training{background:var(--paper-2)}
+  .train-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:44px;align-items:center}
+  .train-steps{display:flex;flex-direction:column;gap:16px}
+  .step{display:flex;gap:16px;align-items:flex-start}
+  .step .no{flex-shrink:0;width:44px;height:44px;border-radius:50%;background:var(--navy);color:var(--orange);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700}
+  .step h4{font-size:17px;color:var(--ink)}
+  .step p{font-size:14px;color:var(--gray)}
+  .train-side{background:linear-gradient(160deg,var(--navy),var(--navy-2));color:#fff;border-radius:var(--radius);padding:38px 32px}
+  .train-side h3{font-size:22px;margin-bottom:18px}
+  .train-side li{list-style:none;padding:9px 0 9px 26px;position:relative;font-size:15px;border-bottom:1px dashed rgba(255,255,255,.15)}
+  .train-side li:last-child{border-bottom:none}
+  .train-side li::before{content:"✓";position:absolute;left:0;color:var(--orange);font-weight:700}
+  .train-side .big{margin-top:20px;font-size:26px;font-weight:800;color:var(--orange);text-align:center;letter-spacing:2px}
+
+  /* ===== 平台 ===== */
+  .platforms{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+  .platforms span{background:var(--paper-2);border:1px solid var(--line);border-radius:10px;padding:12px 26px;font-weight:600;color:var(--ink);box-shadow:0 4px 14px rgba(11,42,74,.06)}
+
+  /* ===== 白皮书 ===== */
+  .wp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:22px}
+  .wp-card{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);padding:32px 28px;box-shadow:var(--shadow);transition:transform .25s,box-shadow .25s}
+  .wp-card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(11,42,74,.16)}
+  .wp-card .no{font-family:var(--mono);font-size:13px;color:var(--orange);letter-spacing:2px}
+  .wp-card h3{font-size:19px;color:var(--ink);margin:10px 0 10px}
+  .wp-card p{font-size:14px;color:var(--gray)}
+  .wp-card .tag{display:inline-block;margin-top:14px;font-size:12px;color:var(--blue);border:1px solid rgba(30,111,217,.35);border-radius:999px;padding:4px 14px}
+
+  /* ===== 联系 ===== */
+  .contact{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-2) 100%);color:#fff;text-align:center}
+  .contact h2{font-size:clamp(24px,3.5vw,36px);font-weight:800}
+  .contact .p{margin:16px auto 0;max-width:560px;color:rgba(255,255,255,.8)}
+  .contact .cta{margin-top:36px}
+  .contact .note{margin-top:26px;font-size:13px;color:rgba(255,255,255,.5)}
+
+  footer{background:#081E33;color:rgba(255,255,255,.55);text-align:center;padding:26px 20px;font-size:13px}
+
+  /* ===== 动画 ===== */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.on{opacity:1;transform:none}
+
+  @media(max-width:860px){
+    nav{display:none;position:absolute;top:64px;left:0;right:0;background:var(--paper);flex-direction:column;padding:16px 24px;gap:16px}
+    nav.open{display:flex}
+    .menu-btn{display:block}
+    .nav-center{gap:10px}
+    .nav-search{width:120px;padding:6px 10px}
+    .nav-search .search-kbd{display:none}
+    .train-grid{grid-template-columns:1fr}
+    .about-grid{grid-template-columns:1fr}
+    .slides{height:520px}
+    .slide{padding:0 24px}
+    .slide-art{display:none}
+    .slide-txt{max-width:100%}
+    .dots{right:24px}
+    section{padding:64px 20px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== 导航 ========== -->
+<header>
+  <div class="nav-wrap">
+    <a class="logo" href="#top">
+      <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="16" stroke="var(--gold)" stroke-width="3"/>
+        <circle cx="20" cy="20" r="7" fill="var(--ink-4)"/>
+        <path d="M20 2v7M20 31v7M2 20h7M31 20h7" stroke="var(--gold)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      DIY<b>参数化</b>
+    </a>
+    <div class="nav-center">
+      <div class="nav-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="searchInput" type="text" placeholder="搜索" aria-label="搜索">
+        <span class="search-kbd">/</span>
+      </div>
+      <nav id="nav">
+        <a href="#top">首页</a>
+        <a href="#library">图书馆</a>
+        <a href="#topics">专题</a>
+        <a href="#favorites">收藏</a>
+        <a href="#about">关于</a>
+      </nav>
+    </div>
+    <div class="nav-right">
+      <div class="theme-switch" id="themeSwitch">
+        <button data-theme="su">素</button>
+        <button data-theme="xuanzhi" class="on">宣纸</button>
+        <button data-theme="moye">墨夜</button>
+      </div>
+      <button class="menu-btn" onclick="document.getElementById('nav').classList.toggle('open')">☰ 菜单</button>
+    </div>
+  </div>
+</header>
+
+<!-- ========== Hero 轮播 ========== -->
+<div class="hero" id="top">
+  <div class="slides">
+
+    <!-- Slide 1 -->
+    <div class="slide on">
+      <div class="slide-txt">
+        <span class="slide-tag">非标自动化 · 参数化设计</span>
+        <h1>只要变化有规律，<br><span class="hl">就能实现自动设计</span></h1>
+        <p>把重复的建模、改图、出BOM，变成一次性的规则定义。让设计经验沉淀下来，让新工程师像老师傅一样有经验。</p>
+        <div class="slogan">&lt; No Code · No SDK · Just Rules &gt;</div>
+        <div class="slide-cta">
+          <a class="btn btn-primary" href="#service">了解服务</a>
+          <a class="btn btn-ghost" href="#library">进入图书馆</a>
+        </div>
+      </div>
+      <div class="slide-art" aria-hidden="true">
+        <svg viewBox="0 0 380 340">
+          <circle cx="190" cy="170" r="150" fill="none" stroke="rgba(var(--ink-rgb),.10)" stroke-width="1.5"/>
+          <circle cx="190" cy="170" r="118" fill="none" stroke="rgba(var(--gold-rgb),.28)" stroke-width="1.5"/>
+          <g class="ring">
+            <circle cx="190" cy="170" r="150" fill="none" stroke="rgba(var(--gold-rgb),.5)" stroke-width="2" stroke-dasharray="6 14"/>
+            <circle cx="340" cy="170" r="7" fill="var(--gold)"/>
+          </g>
+          <circle cx="190" cy="170" r="62" fill="rgba(var(--ink-rgb),.06)" stroke="rgba(var(--ink-rgb),.35)" stroke-width="1.5"/>
+          <circle cx="190" cy="170" r="18" fill="var(--ink)"/>
+          <path d="M190 66v-22M190 274v-22M88 170h-22M292 170h-22" stroke="rgba(var(--ink-rgb),.4)" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Slide 2 -->
+    <div class="slide">
+      <div class="slide-txt">
+        <span class="slide-tag">3 天培训 · 包教包会</span>
+        <h1>不写代码，<br><span class="hl">普通工程师也能参数化</span></h1>
+        <p>不需要二次开发，不需要编程。3 天培训，围绕你自己的产品案例：规律梳理 → 规则定义 → 出图落地。</p>
+        <div class="slogan">&lt; DAY 1 规律 · DAY 2 规则 · DAY 3 落地 &gt;</div>
+        <div class="slide-cta">
+          <a class="btn btn-primary" href="#training">查看培训安排</a>
+          <a class="btn btn-ghost" href="#contact">预约报名</a>
+        </div>
+      </div>
+      <div class="slide-art" aria-hidden="true">
+        <svg viewBox="0 0 380 340">
+          <rect x="30" y="40" width="320" height="260" rx="12" fill="rgba(var(--gold-rgb),.05)" stroke="rgba(var(--ink-rgb),.18)" stroke-width="1.5"/>
+          <g font-family="Consolas,monospace" font-size="15" fill="rgba(var(--ink-rgb),.6)">
+            <text x="60" y="95">01 规律总结</text>
+            <text x="60" y="135">02 参数定义</text>
+            <text x="60" y="175">03 规则驱动</text>
+            <text x="60" y="215">04 自动出图</text>
+            <text x="60" y="255">05 BOM 生成</text>
+          </g>
+          <path d="M250 70h40M250 110h70M250 150h55M250 190h80M250 230h48" stroke="var(--gold)" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="330" cy="230" r="20" fill="var(--gold)"/>
+          <path d="M322 230l6 6 12-12" stroke="var(--paper-2)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Slide 3 -->
+    <div class="slide">
+      <div class="slide-txt">
+        <span class="slide-tag">参数化设计图书馆</span>
+        <h1>经验自主掌控，<br><span class="hl">不再依赖软件服务商</span></h1>
+        <p>自己总结变化规律，自主定义参数规则。设计经验不出企业、不出电脑，安全有保障。</p>
+        <div class="slogan">&lt; SELF-CONTROLLED · DATA SECURITY &gt;</div>
+        <div class="slide-cta">
+          <a class="btn btn-primary" href="#library">浏览图书馆</a>
+          <a class="btn btn-ghost" href="#contact">联系我</a>
+        </div>
+      </div>
+      <div class="slide-art" aria-hidden="true">
+        <svg viewBox="0 0 380 340">
+          <path d="M70 70h160a40 40 0 0 1 40 40v150H70z" fill="rgba(var(--gold-rgb),.06)" stroke="rgba(var(--ink-rgb),.22)" stroke-width="1.5"/>
+          <path d="M310 70H150a40 40 0 0 0-40 40v150h200z" fill="rgba(var(--ink-rgb),.05)" stroke="rgba(var(--ink-rgb),.22)" stroke-width="1.5"/>
+          <path d="M95 140h70M95 180h70M95 220h70" stroke="rgba(var(--ink-rgb),.5)" stroke-width="4" stroke-linecap="round"/>
+          <path d="M245 140h70M245 180h70M245 220h70" stroke="rgba(var(--gold-rgb),.55)" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="340" cy="100" r="26" fill="none" stroke="var(--gold)" stroke-width="3"/>
+          <text x="325" y="109" font-family="Consolas,monospace" font-size="22" fill="var(--gold)">PDF</text>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="arrows">
+    <button id="prev" aria-label="上一张">‹</button>
+    <button id="next" aria-label="下一张">›</button>
+  </div>
+</div>
+
+<!-- ========== 卖点条 ========== -->
+<div class="strip">
+  <div class="strip-inner">
+    <span>不写代码</span><span>不做二次开发</span><span>规律自己总结</span><span>参数自主定义</span><span>经验不外泄</span><span>培训<b>3天</b>包教包会</span>
+  </div>
+</div>
+
+<!-- ========== 核心主张 ========== -->
+<section class="claim" id="claim">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">PHILOSOPHY</div>
+      <h2>核心理念：把设计交给规律</h2>
+      <p>我不是卖软件给你，而是教你掌握一种方法——自己总结变化规律，自己定义参数规则，从此掌握设计的主动权。</p>
+    </div>
+    <div class="claim-grid">
+      <div class="claim-card reveal">
+        <div class="thumb">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#35C2E8" stroke-width="1.6"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+        </div>
+        <div class="num">/ 01</div>
+        <div class="en">ZERO CODE</div>
+        <h3>零门槛</h3>
+        <p>不需要二次开发，不需要写代码，普通工程师也能上手。</p>
+        <div class="cross">✕ 编程 ✕ 脚本 ✕ API</div>
+      </div>
+      <div class="claim-card reveal">
+        <div class="thumb">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#35C2E8" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+        <div class="num">/ 02</div>
+        <div class="en">SELF-CONTROLLED</div>
+        <h3>自主可控</h3>
+        <p>自己总结变化规律，自主定义规则，不再依赖软件服务商，自由。</p>
+        <div class="cross">✕ 受制于人 ✕ 排队等更新</div>
+      </div>
+      <div class="claim-card reveal">
+        <div class="thumb">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#35C2E8" stroke-width="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <div class="num">/ 03</div>
+        <div class="en">DATA SECURITY</div>
+        <h3>安全放心</h3>
+        <p>设计经验不出企业、不出电脑，安全有保障，知识产权不外泄。</p>
+        <div class="cross">✕ 上传云端 ✕ 数据外流</div>
+      </div>
+      <div class="claim-card reveal">
+        <div class="thumb">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#35C2E8" stroke-width="1.6"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="num">/ 04</div>
+        <div class="en">HIGH EFFICIENCY</div>
+        <h3>效率倍增</h3>
+        <p>系列化产品改参即得：自动生成3D模型、工程图、BOM清单，效率提升数倍至数十倍。</p>
+      </div>
+      <div class="claim-card reveal">
+        <div class="thumb">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#35C2E8" stroke-width="1.6"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <div class="num">/ 05</div>
+        <div class="en">KNOWHOW</div>
+        <h3>知识传承</h3>
+        <p>把老师傅的行业经验（Knowhow）转化成可复用的设计规则，经验在企业内共享传承。</p>
+      </div>
+      <div class="claim-card reveal">
+        <div class="thumb">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#35C2E8" stroke-width="1.6"><circle cx="12" cy="8" r="6"/><path d="M15.5 13l2 5-5.5-2.5L6.5 18l2-5"/><path d="M12 2v2M4 8h2M18 8h2"/></svg>
+        </div>
+        <div class="num">/ 06</div>
+        <div class="en">3 DAYS TRAINING</div>
+        <h3>包教包会</h3>
+        <p>培训 3 天，包教包会，学完即可独立搭建自己的参数化模块。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 服务内容 ========== -->
+<section id="service">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">SERVICES</div>
+      <h2>我能为你做什么</h2>
+      <p>从培训到落地，从单点方案到体系搭建，覆盖非标参数化设计全流程。</p>
+    </div>
+    <div class="cards">
+      <div class="card reveal">
+        <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></div>
+        <h3>参数化设计培训</h3>
+        <p>3 天线下小班 / 企业内训，包教包会。</p>
+        <ul>
+          <li>变化规律总结方法</li>
+          <li>参数定义与驱动规则</li>
+          <li>自动出图与 BOM 清单</li>
+          <li>模板化、标准化规范</li>
+        </ul>
+      </div>
+      <div class="card reveal">
+        <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+        <h3>非标自动化方案</h3>
+        <p>整机 / 单机非标自动化设备设计，方案选型计算。</p>
+        <ul>
+          <li>机构方案与选型计算</li>
+          <li>传动 / 气动 / 电气选型</li>
+          <li>参数化整机建模</li>
+          <li>出图与 BOM 落地</li>
+        </ul>
+      </div>
+      <div class="card reveal">
+        <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg></div>
+        <h3>参数化模板 / 宏</h3>
+        <p>帮你把常用件做成改参即用的参数化模块。</p>
+        <ul>
+          <li>标准件参数化模板</li>
+          <li>系列零件表 / 方程式</li>
+          <li>自动命名与属性配置</li>
+          <li>企业模板规范建设</li>
+        </ul>
+      </div>
+      <div class="card reveal">
+        <div class="ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="5"/></svg></div>
+        <h3>设计咨询</h3>
+        <p>一对一诊断你当前的设计痛点，给出落地方案。</p>
+        <ul>
+          <li>现状流程诊断</li>
+          <li>参数化改造路径规划</li>
+          <li>标准模块化体系建设</li>
+          <li>疑难问题专项支持</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 培训 ========== -->
+<section class="training" id="training">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">TRAINING</div>
+      <h2>3 天培训 · 包教包会</h2>
+      <p>不讲理论空话，全部围绕你自己的产品案例，学完就能用。</p>
+    </div>
+    <div class="train-grid">
+      <div class="train-steps">
+        <div class="step reveal">
+          <div class="no">1</div>
+          <div><h4>Day 1 · 规律梳理</h4><p>带你梳理产品的变化规律，建立参数化模型思维，掌握规则总结方法。</p></div>
+        </div>
+        <div class="step reveal">
+          <div class="no">2</div>
+          <div><h4>Day 2 · 规则定义</h4><p>动手定义参数、配置驱动规则，完成你自己的第一个参数化模块。</p></div>
+        </div>
+        <div class="step reveal">
+          <div class="no">3</div>
+          <div><h4>Day 3 · 出图落地</h4><p>自动生成工程图与BOM清单，规范命名与属性，交付可复用成果。</p></div>
+        </div>
+        <div class="step reveal">
+          <div class="no">✓</div>
+          <div><h4>培训后 · 持续支持</h4><p>包教包会承诺：培训后仍提供答疑支持，确保真正落地使用。</p></div>
+        </div>
+      </div>
+      <div class="train-side reveal">
+        <h3>你将获得</h3>
+        <ul>
+          <li>一套可复用的参数化设计方法论</li>
+          <li>基于你自己产品的参数化模块</li>
+          <li>自动出图 + BOM 的标准流程</li>
+          <li>设计经验安全留在企业内部的方案</li>
+          <li>不再依赖外部服务商的自主能力</li>
+        </ul>
+        <div class="big">3 DAYS · 包教包会</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 白皮书 ========== -->
+<section id="whitepaper">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">WHITEPAPER</div>
+      <h2>参数化设计白皮书</h2>
+      <p>系统梳理非标自动化参数化设计的方法论、误区与落地路径。</p>
+    </div>
+    <div class="wp-grid">
+      <div class="wp-card reveal">
+        <div class="no">WHITEPAPER / 01</div>
+        <h3>什么是参数化设计</h3>
+        <p>把重复的设计动作抽象成「参数 + 规则」：改参数即得新设计，模型、工程图、BOM 同步生成，一次定义、反复使用。</p>
+        <span class="tag">概念</span>
+      </div>
+      <div class="wp-card reveal">
+        <div class="no">WHITEPAPER / 02</div>
+        <h3>为什么非标行业需要它</h3>
+        <p>非标设备多品种、小批量、改型频繁，重复建模与改图往往占设计工时 60% 以上——这正是参数化最擅长的战场。</p>
+        <span class="tag">价值</span>
+      </div>
+      <div class="wp-card reveal">
+        <div class="no">WHITEPAPER / 03</div>
+        <h3>方法论：规律 → 规则 → 自动</h3>
+        <p>第一步总结产品变化规律，第二步定义参数与驱动规则，第三步自动生成模型、图纸与清单。三步缺一不可。</p>
+        <span class="tag">方法</span>
+      </div>
+      <div class="wp-card reveal">
+        <div class="no">WHITEPAPER / 04</div>
+        <h3>落地路径：3 天培训体系</h3>
+        <p>不教编程、不卖软件，围绕你自己的产品案例：Day1 梳理规律，Day2 定义规则，Day3 出图落地，学完即用。</p>
+        <span class="tag">培训</span>
+      </div>
+      <div class="wp-card reveal">
+        <div class="no">WHITEPAPER / 05</div>
+        <h3>常见误区</h3>
+        <p>参数化 ≠ 写代码，≠ 二次开发，≠ 套模板。它是工程师用产品思维总结规律的过程，工具只是载体。</p>
+        <span class="tag">认知</span>
+      </div>
+      <div class="wp-card reveal">
+        <div class="no">WHITEPAPER / 06</div>
+        <h3>开始你的第一个参数化模块</h3>
+        <p>选一个你手上重复次数最多的零件，从它开始。预约咨询，我帮你诊断哪些环节值得先参数化。</p>
+        <span class="tag">行动</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 支持平台 ========== -->
+<section id="platform">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">PLATFORMS</div>
+      <h2>支持主流三维设计平台</h2>
+      <p>不局限于单一软件，方法通用，规则通用。</p>
+    </div>
+    <div class="platforms reveal">
+      <span>SOLIDWORKS</span>
+      <span>Solid Edge</span>
+      <span>新迪天工CAD</span>
+      <span>中望3D</span>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 图书馆 ========== -->
+<section id="library">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">LIBRARY</div>
+      <h2>参数化设计图书馆</h2>
+      <p>参数化设计的文档、白皮书与资料，持续更新中。</p>
+    </div>
+    <div class="lib-grid" id="libGrid"></div>
+  </div>
+</section>
+
+<!-- ========== 专题 ========== -->
+<section id="topics">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">TOPICS</div>
+      <h2>专题</h2>
+      <p>参数化设计主题内容，持续更新。</p>
+    </div>
+    <div class="lib-grid" id="topicGrid"></div>
+  </div>
+</section>
+
+<!-- ========== 收藏 ========== -->
+<section id="favorites">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">FAVORITES</div>
+      <h2>精选收藏</h2>
+      <p>我精选的参数化设计资源，点击卡片上的收藏按钮即可收藏。</p>
+    </div>
+    <div class="lib-grid" id="favGrid"></div>
+  </div>
+</section>
+
+<!-- ========== 关于 ========== -->
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="kicker">ABOUT</div>
+      <h2>关于 DIY参数化</h2>
+      <p>非标机械工程师 · 参数化设计实践者</p>
+    </div>
+    <div class="about-grid">
+      <div class="about-txt reveal">
+        <h3>变化有规律，设计即自动</h3>
+        <p>我是一名深耕非标自动化领域的机械工程师，擅长把重复的设计工作抽象成「参数 + 规则」，让模型、图纸、BOM 随参数自动生成。</p>
+        <p>我相信：非标设计的每一次重复，都是隐藏的机会——只要变化有规律，就能实现自动设计。</p>
+        <ul class="about-list">
+          <li>不写代码、不做二次开发，普通工程师也能掌握</li>
+          <li>规律自己总结、参数自主定义，不再依赖软件服务商</li>
+          <li>设计经验不出企业，安全有保障</li>
+          <li>培训 3 天，包教包会</li>
+        </ul>
+      </div>
+      <div class="about-side reveal">
+        <h4>联系与服务</h4>
+        <ul>
+          <li>参数化设计培训（3 天包教包会）</li>
+          <li>非标自动化方案设计</li>
+          <li>参数化模板 / 宏开发</li>
+          <li>设计咨询与体系搭建</li>
+        </ul>
+        <div class="big">邮箱 2713510938@qq.com<br>微信 HYCOOLive</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 联系 ========== -->
+<section class="contact" id="contact">
+  <div class="wrap reveal">
+    <h2>让重复的设计，变成一次性的能力</h2>
+    <p class="p">无论是个人提升还是企业内训，先聊聊你的产品，我帮你判断哪些环节可以参数化、能提效多少。</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="mailto:2713510938@qq.com">预约咨询</a>
+    </div>
+    <div class="note">邮箱：2713510938@qq.com · 微信：HYCOOLive · 工作日 9:00-18:00 回复</div>
+  </div>
+</section>
+
+<footer>© 2026 DIY参数化 · 非标自动化参数化设计 · 只要变化有规律，就能实现自动设计</footer>
+
+<script src="library-data.js"></script>
+<script>
+  // 滚动渐入（可复用：动态渲染的卡片也调用）
+  let io;
+  function observeReveals(){
+    if(!io){
+      io = new IntersectionObserver(es=>{
+        es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target);} });
+      },{threshold:.12});
+    }
+    document.querySelectorAll('.reveal').forEach(el=>{
+      if(!el.classList.contains('on')) io.observe(el);
+    });
+  }
+  observeReveals();
+
+  // 点击导航关闭移动端菜单
+  document.querySelectorAll('#nav a').forEach(a=>{
+    a.addEventListener('click',()=>document.getElementById('nav').classList.remove('open'));
+  });
+
+  // 主题切换（素 / 宣纸 / 墨夜）
+  (function(){
+    const sw = document.getElementById('themeSwitch');
+    const saved = localStorage.getItem('diy-theme') || 'xuanzhi';
+    function apply(t){
+      document.documentElement.setAttribute('data-theme', t);
+      try{ localStorage.setItem('diy-theme', t); }catch(e){}
+      sw.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.theme === t));
+    }
+    sw.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>apply(b.dataset.theme)));
+    apply(saved);
+  })();
+
+  // 搜索：/ 快捷键聚焦 + 回车站内检索
+  (function(){
+    const input = document.getElementById('searchInput');
+    if(!input) return;
+    const sections = Array.from(document.querySelectorAll('section, .hero')).filter(el=>el.id);
+    document.addEventListener('keydown', e=>{
+      if(e.key === '/' && document.activeElement !== input){
+        e.preventDefault(); input.focus();
+      }
+    });
+    input.addEventListener('keydown', e=>{
+      if(e.key !== 'Enter') return;
+      const q = input.value.trim();
+      if(!q) return;
+      let found = null;
+      for(const el of sections){
+        if(el.innerText && el.innerText.includes(q)){ found = el; break; }
+      }
+      if(found){
+        found.scrollIntoView({behavior:'smooth'});
+        const h = found.querySelector('h1,h2,h3');
+        if(h){ h.style.transition='background .8s'; h.style.background='rgba(var(--gold-rgb),.3)'; setTimeout(()=>h.style.background='transparent', 1600); }
+      } else {
+        input.style.borderColor = 'var(--gold)';
+        setTimeout(()=>input.style.borderColor='', 1200);
+      }
+    });
+  })();
+
+  // 收藏交互（localStorage 记忆，可复用）
+  function initFavs(){
+    const btnSel = '.fav-btn';
+    const saved = (function(){ try{ return JSON.parse(localStorage.getItem('diy-favs')||'[]'); }catch(e){ return []; } })();
+    document.querySelectorAll('.fav-card').forEach(card=>{
+      if(card._favBound) return;
+      card._favBound = true;
+      const btn = card.querySelector(btnSel);
+      const key = card.dataset.fav;
+      if(saved.includes(key)) btn.classList.add('on');
+      btn.addEventListener('click', ()=>{
+        const idx = saved.indexOf(key);
+        if(idx > -1){ saved.splice(idx,1); btn.classList.remove('on'); }
+        else { saved.push(key); btn.classList.add('on'); }
+        try{ localStorage.setItem('diy-favs', JSON.stringify(saved)); }catch(e){}
+      });
+    });
+  }
+  initFavs();
+
+  // 图书馆 / 专题 / 收藏 数据渲染（数据在 library-data.js）
+  (function(){
+    const data = (window.DIY_LIBRARY) || {library:[],topics:[],favorites:[]};
+    function libCard(item){
+      const link = item.link ? `<a class="fav-link" style="display:inline-block;margin-top:12px;font-size:13px;color:var(--gold);" href="${item.link}" target="_blank" rel="noopener">查看资料 ↗</a>` : '';
+      return '<div class="lib-card reveal">' +
+        '<div class="head"><span class="type">' + (item.type||'') + '</span><span class="status">' + (item.status||'') + '</span></div>' +
+        '<h3>' + item.title + '</h3><p>' + item.desc + '</p>' +
+        '<div class="meta">' + (item.meta||'') + '</div>' + link +
+      '</div>';
+    }
+    function favCard(item){
+      const link = item.link ? `<a class="fav-link" style="display:inline-block;margin-top:6px;font-size:13px;color:var(--gold);" href="${item.link}" target="_blank" rel="noopener">查看资料 ↗</a>` : '';
+      return '<div class="fav-card reveal" data-fav="' + item.favKey + '">' +
+        '<div class="head"><span class="type">' + (item.type||'') + '</span><button class="fav-btn">收藏</button></div>' +
+        '<h3>' + item.title + '</h3><p>' + item.desc + '</p>' +
+        '<div class="meta">' + (item.meta||'') + '</div>' + link +
+      '</div>';
+    }
+    document.getElementById('libGrid').innerHTML = data.library.map(libCard).join('');
+    document.getElementById('topicGrid').innerHTML = data.topics.map(libCard).join('');
+    document.getElementById('favGrid').innerHTML = data.favorites.map(favCard).join('');
+    observeReveals();
+    initFavs();
+  })();
+
+  // 首页轮播
+  (function(){
+    const slides = document.querySelectorAll('.slide');
+    const dotsWrap = document.getElementById('dots');
+    const total = slides.length;
+    let cur = 0, timer = null;
+
+    slides.forEach((_, i) => {
+      const b = document.createElement('button');
+      if (i === 0) b.className = 'on';
+      b.setAttribute('aria-label', '第' + (i + 1) + '张');
+      b.addEventListener('click', () => { go(i); restart(); });
+      dotsWrap.appendChild(b);
+    });
+    const dots = dotsWrap.querySelectorAll('button');
+
+    function go(i){
+      slides[cur].classList.remove('on');
+      dots[cur].classList.remove('on');
+      cur = (i + total) % total;
+      slides[cur].classList.add('on');
+      dots[cur].classList.add('on');
+    }
+    function restart(){
+      clearInterval(timer);
+      timer = setInterval(() => go(cur + 1), 5000);
+    }
+    document.getElementById('prev').addEventListener('click', () => { go(cur - 1); restart(); });
+    document.getElementById('next').addEventListener('click', () => { go(cur + 1); restart(); });
+    restart();
+  })();
+</script>
+</body>
+</html>
