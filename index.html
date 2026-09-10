@@ -6,6 +6,8 @@
 <title>DIY参数化 · 非标自动化参数化设计</title>
 <meta name="description" content="只要变化有规律，就可实现自动设计。不写代码、不做二次开发，自己总结变化规律，自主定义参数化设计，培训3天包教包会。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%230B2A4A'/%3E%3Ccircle cx='20' cy='20' r='13' stroke='%23F59E0B' stroke-width='3' fill='none'/%3E%3Ccircle cx='20' cy='20' r='5.5' fill='%2335C2E8'/%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.2/dist/docx-preview.min.js"></script>
 <style>
   :root{
     --navy:#0B2A4A;
@@ -155,6 +157,21 @@
   .lib-card h3{font-size:19px;color:var(--ink)}
   .lib-card p{font-size:14px;color:var(--gray);flex:1}
   .lib-card .meta{font-size:12px;color:#8A98A8;font-family:var(--mono)}
+
+  /* ===== 在线阅读弹层 ===== */
+  .reader-mask{position:fixed;inset:0;background:rgba(10,16,24,.66);z-index:200;display:none;align-items:center;justify-content:center;padding:30px}
+  .reader-mask.on{display:flex}
+  .reader{background:var(--paper);border-radius:14px;width:min(1080px,100%);height:min(85vh,860px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+  .reader-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid rgba(var(--ink-rgb),.12);flex-shrink:0}
+  .reader-bar span{font-size:15px;color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:16px}
+  .reader-bar button{flex-shrink:0;border:1px solid rgba(var(--ink-rgb),.3);background:none;color:var(--ink);border-radius:8px;padding:5px 16px;font-size:14px;cursor:pointer;transition:all .2s}
+  .reader-bar button:hover{background:var(--gold);border-color:var(--gold);color:#fff}
+  .reader-body{flex:1;overflow:auto;background:var(--paper-2)}
+  .reader-body iframe{width:100%;height:100%;border:none;display:block}
+  .reader-body .docx-wrap{padding:30px}
+  .reader-body .docx-wrap table{border-collapse:collapse}
+  .reader-body .docx-wrap table, .reader-body .docx-wrap td, .reader-body .docx-wrap th{border:1px solid rgba(var(--ink-rgb),.25)}
+  .reader-loading{padding:60px;text-align:center;color:var(--ink-3);font-size:15px}
 
   /* ===== 专题 / 收藏 / 关于 ===== */
   .fav-card{background:var(--paper-2);border:1px solid rgba(var(--ink-rgb),.12);border-radius:var(--radius);padding:28px 26px;transition:transform .25s,box-shadow .25s;display:flex;flex-direction:column;gap:10px}
@@ -738,6 +755,17 @@
 
 <footer>© 2026 DIY参数化 · 非标自动化参数化设计 · 只要变化有规律，就能实现自动设计</footer>
 
+<!-- 在线阅读弹层 -->
+<div class="reader-mask" id="readerMask">
+  <div class="reader">
+    <div class="reader-bar">
+      <span id="readerTitle">阅读</span>
+      <button id="readerClose">关闭 ✕</button>
+    </div>
+    <div class="reader-body" id="readerBody"><div class="reader-loading">加载中…</div></div>
+  </div>
+</div>
+
 <script src="library-data.js"></script>
 <script>
   // 滚动渐入（可复用：动态渲染的卡片也调用）
@@ -821,23 +849,70 @@
   }
   initFavs();
 
+  // 在线阅读弹层（PDF 内嵌预览 / Word 在线渲染）
+  (function(){
+    const mask = document.getElementById('readerMask');
+    const title = document.getElementById('readerTitle');
+    const body = document.getElementById('readerBody');
+    const close = document.getElementById('readerClose');
+    close.addEventListener('click', ()=>{ mask.classList.remove('on'); body.innerHTML=''; });
+    mask.addEventListener('click', e=>{ if(e.target === mask){ mask.classList.remove('on'); body.innerHTML=''; } });
+
+    async function openDoc(link, name, ext){
+      title.textContent = name;
+      body.innerHTML = '<div class="reader-loading">加载中…</div>';
+      mask.classList.add('on');
+      const url = link;
+      if(ext === 'pdf'){
+        body.innerHTML = '<iframe src="' + url + '"></iframe>';
+        return;
+      }
+      if(ext === 'docx' || ext === 'doc'){
+        try{
+          const resp = await fetch(url);
+          const buf = await resp.arrayBuffer();
+          body.innerHTML = '<div class="docx-wrap"></div>';
+          const wrap = body.querySelector('.docx-wrap');
+          await docx.renderAsync(buf, wrap, null, {breakPages:true, ignoreLastRenderedPageBreak:false});
+        }catch(e){
+          body.innerHTML = '<div class="reader-loading">预览失败，<a href="' + url + '" target="_blank" style="color:var(--gold);text-decoration:underline;">点击下载查看</a></div>';
+        }
+        return;
+      }
+      body.innerHTML = '<div class="reader-loading">该格式暂不支持在线预览，<a href="' + url + '" target="_blank" style="color:var(--gold);text-decoration:underline;">点击下载查看</a></div>';
+    }
+
+    document.addEventListener('click', e=>{
+      const btn = e.target.closest('.read-btn');
+      if(btn){
+        const card = btn.closest('.lib-card, .fav-card');
+        const name = card ? (card.querySelector('h3') ? card.querySelector('h3').textContent : '') : '';
+        openDoc(btn.dataset.link, name, btn.dataset.ext);
+      }
+    });
+    window.__openDoc = openDoc;
+  })();
+
   // 图书馆 / 专题 / 收藏 数据渲染（数据在 library-data.js）
   (function(){
     const data = (window.DIY_LIBRARY) || {library:[],topics:[],favorites:[]};
+    function readBtn(item){
+      if(!item.link) return '';
+      const ext = (item.link.split('.').pop()||'').toLowerCase();
+      return '<button class="read-btn" style="align-self:flex-start;margin-top:12px;font-size:13px;color:var(--gold);border:1px solid rgba(var(--gold-rgb),.45);background:none;border-radius:8px;padding:6px 16px;cursor:pointer;transition:all .2s;" data-link="' + item.link + '" data-ext="' + ext + '">在线阅读 ↗</button>';
+    }
     function libCard(item){
-      const link = item.link ? `<a class="fav-link" style="display:inline-block;margin-top:12px;font-size:13px;color:var(--gold);" href="${item.link}" target="_blank" rel="noopener">查看资料 ↗</a>` : '';
       return '<div class="lib-card reveal">' +
         '<div class="head"><span class="type">' + (item.type||'') + '</span><span class="status">' + (item.status||'') + '</span></div>' +
         '<h3>' + item.title + '</h3><p>' + item.desc + '</p>' +
-        '<div class="meta">' + (item.meta||'') + '</div>' + link +
+        '<div class="meta">' + (item.meta||'') + '</div>' + readBtn(item) +
       '</div>';
     }
     function favCard(item){
-      const link = item.link ? `<a class="fav-link" style="display:inline-block;margin-top:6px;font-size:13px;color:var(--gold);" href="${item.link}" target="_blank" rel="noopener">查看资料 ↗</a>` : '';
       return '<div class="fav-card reveal" data-fav="' + item.favKey + '">' +
         '<div class="head"><span class="type">' + (item.type||'') + '</span><button class="fav-btn">收藏</button></div>' +
         '<h3>' + item.title + '</h3><p>' + item.desc + '</p>' +
-        '<div class="meta">' + (item.meta||'') + '</div>' + link +
+        '<div class="meta">' + (item.meta||'') + '</div>' + readBtn(item) +
       '</div>';
     }
     document.getElementById('libGrid').innerHTML = data.library.map(libCard).join('');
