@@ -178,18 +178,6 @@ https://huangyan920.github.io/DIY-SW/ 体验网址
   </div>
 </section>
 
-<!-- ========== 联系 ========== -->
-<section class="contact" id="contact">
-  <div class="wrap reveal">
-    <h2>让重复的设计，变成一次性的能力</h2>
-    <p class="p">无论是个人提升还是企业内训，先聊聊你的产品，我帮你判断哪些环节可以参数化、能提效多少。</p>
-    <div class="cta">
-      <a class="btn btn-primary" href="mailto:2713510938@qq.com">预约咨询</a>
-    </div>
-    <div class="note">邮箱：2713510938@qq.com · 微信：HYCOOLive · 工作日 9:00-18:00 回复</div>
-  </div>
-</section>
-
 <footer>© 2026 DIY参数化 · 非标自动化参数化设计 · 只要变化有规律，就能实现自动设计</footer>
 
 <script>
