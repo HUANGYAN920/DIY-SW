@@ -8,6 +8,12 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%230B2A4A'/%3E%3Ccircle cx='20' cy='20' r='13' stroke='%23F59E0B' stroke-width='3' fill='none'/%3E%3Ccircle cx='20' cy='20' r='5.5' fill='%2335C2E8'/%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.2/dist/docx-preview.min.js"></script>
+<script>
+  /* CDN 兜底：jsdelivr 加载失败时自动切换 unpkg */
+  if (typeof window.docx === 'undefined') {
+    document.write('<script src="https://unpkg.com/docx-preview@0.3.2/dist/docx-preview.min.js"><\/script>');
+  }
+</script>
 <style>
   :root{
     --navy:#0B2A4A;
@@ -387,7 +393,10 @@
   <div class="reader">
     <div class="reader-bar">
       <span id="readerTitle">阅读</span>
-      <button id="readerClose">关闭 ✕</button>
+      <span style="display:flex;gap:10px;align-items:center;">
+        <a id="readerDownload" href="#" target="_blank" rel="noopener" style="font-size:14px;color:var(--gold);border:1px solid rgba(var(--gold-rgb),.5);border-radius:8px;padding:5px 14px;text-decoration:none;">下载原文件</a>
+        <button id="readerClose">关闭 ✕</button>
+      </span>
     </div>
     <div class="reader-body" id="readerBody"><div class="reader-loading">加载中…</div></div>
   </div>
@@ -485,14 +494,12 @@
     mask.addEventListener('click', e=>{ if(e.target === mask){ mask.classList.remove('on'); body.innerHTML=''; } });
 
     async function openDoc(link, name, ext){
+      const dl = document.getElementById('readerDownload');
+      if(dl) dl.href = link;
       title.textContent = name;
       body.innerHTML = '<div class="reader-loading">加载中…</div>';
       mask.classList.add('on');
       const url = link;
-      if(ext === 'pdf'){
-        body.innerHTML = '<iframe src="' + url + '"></iframe>';
-        return;
-      }
       if(ext === 'docx' || ext === 'doc'){
         try{
           const resp = await fetch(url);
@@ -510,7 +517,7 @@
 
     document.addEventListener('click', e=>{
       const btn = e.target.closest('.read-btn');
-      if(btn){
+      if(btn && btn.tagName === 'BUTTON'){
         const card = btn.closest('.lib-card, .fav-card');
         const name = card ? (card.querySelector('h3') ? card.querySelector('h3').textContent : '') : '';
         openDoc(btn.dataset.link, name, btn.dataset.ext);
@@ -530,7 +537,11 @@
     function readBtn(item){
       if(!item.link) return '';
       const ext = (item.link.split('.').pop()||'').toLowerCase();
-      return '<button class="read-btn" style="align-self:flex-start;margin-top:12px;font-size:13px;color:var(--gold);border:1px solid rgba(var(--gold-rgb),.45);background:none;border-radius:8px;padding:6px 16px;cursor:pointer;transition:all .2s;" data-link="' + item.link + '" data-ext="' + ext + '">在线阅读 ↗</button>';
+      const base = 'class="read-btn" style="align-self:flex-start;margin-top:12px;font-size:13px;color:var(--gold);border:1px solid rgba(var(--gold-rgb),.45);background:none;border-radius:8px;padding:6px 16px;cursor:pointer;transition:all .2s;text-decoration:none;"';
+      if(ext === 'pdf'){
+        return '<a ' + base + ' href="' + item.link + '" target="_blank" rel="noopener" data-ext="pdf">在线阅读 ↗</a>';
+      }
+      return '<button ' + base + ' data-link="' + item.link + '" data-ext="' + ext + '">在线阅读 ↗</button>';
     }
     function libCard(item){
       return '<div class="lib-card reveal">' +

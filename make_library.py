@@ -16,11 +16,11 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 DOCS_DIR = os.path.join(BASE, "资料")
 OUT = os.path.join(BASE, "library-data.js")
 
-# 板块 → 子文件夹 → 标签
+# 板块 → 子文件夹 → 标签 → 允许的扩展名（None=全部）
 CATEGORIES = [
-    ("tutorials", "教程", "教程"),
-    ("whitepapers", "白皮书", "白皮书"),
-    ("macros", "宏文件", "宏文件"),
+    ("tutorials", "教程", "教程", None),
+    ("whitepapers", "白皮书", "白皮书", None),
+    ("macros", "宏文件", "宏文件", {".swb", ".swp", ".bas", ".dll", ".zip", ".txt", ".pdf", ".docx", ".doc"}),
 ]
 
 EXT_MAP = {
@@ -64,28 +64,35 @@ def load_old_data():
         return None
 
 
-def scan_folder(folder, cat_label):
+def scan_folder(folder, allow_ext=None):
+    """递归扫描文件夹下所有支持的文档"""
     items = []
-    if os.path.isdir(folder):
-        for name in sorted(os.listdir(folder)):
+    if not os.path.isdir(folder):
+        return items
+    for root, _, files in os.walk(folder):
+        for name in sorted(files):
             if name.startswith("~$") or name.startswith("."):
                 continue
             ext = os.path.splitext(name)[1].lower()
             if ext not in EXT_MAP:
                 continue
-            path = os.path.join(folder, name)
+            if allow_ext is not None and ext not in allow_ext:
+                continue
+            path = os.path.join(root, name)
             size_kb = os.path.getsize(path) / 1024
             size_txt = f"{size_kb:.0f} KB" if size_kb < 1024 else f"{size_kb / 1024:.1f} MB"
             title = os.path.splitext(name)[0]
             tag, kind = EXT_MAP[ext]
             mtime = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime("%Y-%m-%d")
+            # 相对「资料」的路径，保留子文件夹层级
+            rel = os.path.relpath(path, DOCS_DIR).replace(os.sep, "/")
             items.append({
                 "title": title,
                 "desc": f"{kind} · {size_txt} · 更新于 {mtime}。点击「在线阅读」直接查看。",
                 "type": tag,
                 "status": "可下载",
                 "meta": f"{tag} · {size_txt}",
-                "link": f"资料/{cat_label}/{name}",
+                "link": f"资料/{rel}",
             })
     return items
 
@@ -97,7 +104,7 @@ def main():
         input("按回车键退出...")
         return
 
-    for _, sub, _ in CATEGORIES:
+    for _, sub, _, _ in CATEGORIES:
         d = os.path.join(DOCS_DIR, sub)
         if not os.path.isdir(d):
             os.makedirs(d, exist_ok=True)
@@ -107,8 +114,8 @@ def main():
 
     result = {}
     total = 0
-    for key, sub, label in CATEGORIES:
-        result[key] = scan_folder(os.path.join(DOCS_DIR, sub), label)
+    for key, sub, label, allow in CATEGORIES:
+        result[key] = scan_folder(os.path.join(DOCS_DIR, sub), allow)
         total += len(result[key])
 
     js = []
@@ -117,7 +124,7 @@ def main():
     js.append(" * 更新方法：把文档放进 资料\\教程、资料\\白皮书、资料\\宏文件 → 双击「更新资料.bat」")
     js.append(" */")
     js.append("window.DIY_LIBRARY = {")
-    for key, sub, label in CATEGORIES:
+    for key, sub, label, allow in CATEGORIES:
         js.append("  " + key + ": " + json.dumps(result[key], ensure_ascii=False, indent=2) + ",")
     js.append("  favorites: " + json.dumps(favorites, ensure_ascii=False, indent=2))
     js.append("};")
@@ -127,7 +134,7 @@ def main():
 
     print("=" * 46)
     print("生成完成！共 %d 个文档：" % total)
-    for key, sub, label in CATEGORIES:
+    for key, sub, label, allow in CATEGORIES:
         print("  [%s] %d 个" % (label, len(result[key])))
         for it in result[key]:
             print("    · %s" % it["title"])
